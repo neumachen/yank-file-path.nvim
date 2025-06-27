@@ -68,7 +68,6 @@ local function format_path(mods, buf_path)
   if mods == ":root" then
     local root_dir = find_root_dir(path)
     if root_dir then
-      local relative_path = vim.fn.fnamemodify(path, ":.")
       local root_relative = vim.fn.substitute(vim.fn.resolve(path), "^" .. vim.fn.escape(root_dir, "\\") .. "/", "", "")
       return root_relative
     else
