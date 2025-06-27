@@ -139,13 +139,64 @@ Plug 'neumachen/yank-file-path.nvim'
 
 You can create your own key mappings for frequently used commands:
 
+### Basic Key Mappings
+
 ```lua
--- Example key mappings
+-- Single file commands
 vim.keymap.set('n', '<leader>yp', ':YankRelativeFilePath<CR>', { desc = 'Yank relative file path' })
 vim.keymap.set('n', '<leader>yP', ':YankAbsoluteFilePath<CR>', { desc = 'Yank absolute file path' })
-vim.keymap.set('n', '<leader>yn', ':YankFileName<CR>', { desc = 'Yank filename' })
-vim.keymap.set('n', '<leader>ya', ':YankAllRelativeFilePaths<CR>', { desc = 'Yank all relative paths' })
+vim.keymap.set('n', '<leader>yh', ':YankRelativeFilePathFromHome<CR>', { desc = 'Yank path from home' })
+vim.keymap.set('n', '<leader>yn', ':YankFileName<CR>', { desc = 'Yank filename only' })
+vim.keymap.set('n', '<leader>yr', ':YankRootRelativeFilePath<CR>', { desc = 'Yank root-relative path' })
+
+-- Multiple files commands
+vim.keymap.set('n', '<leader>yap', ':YankAllRelativeFilePaths<CR>', { desc = 'Yank all relative paths' })
+vim.keymap.set('n', '<leader>yaP', ':YankAllAbsoluteFilePaths<CR>', { desc = 'Yank all absolute paths' })
+vim.keymap.set('n', '<leader>yan', ':YankAllFileNames<CR>', { desc = 'Yank all filenames' })
+vim.keymap.set('n', '<leader>yar', ':YankAllRootRelativeFilePaths<CR>', { desc = 'Yank all root-relative paths' })
 ```
+
+### Advanced Key Mappings with Custom Separators
+
+```lua
+-- Copy all paths with newline separator
+vim.keymap.set('n', '<leader>yanl', ':YankAllRelativeFilePaths \\n<CR>', { desc = 'Yank all paths (newlines)' })
+
+-- Copy all paths with comma separator
+vim.keymap.set('n', '<leader>yac', ':YankAllRelativeFilePaths ,<CR>', { desc = 'Yank all paths (commas)' })
+
+-- Copy all filenames with tab separator
+vim.keymap.set('n', '<leader>yant', ':YankAllFileNames \\t<CR>', { desc = 'Yank all filenames (tabs)' })
+```
+
+### Using with Which-Key Plugin
+
+If you use [which-key.nvim](https://github.com/folke/which-key.nvim), you can organize the mappings:
+
+```lua
+local wk = require("which-key")
+
+wk.register({
+  y = {
+    name = "Yank File Paths",
+    p = { ":YankRelativeFilePath<CR>", "Relative path" },
+    P = { ":YankAbsoluteFilePath<CR>", "Absolute path" },
+    h = { ":YankRelativeFilePathFromHome<CR>", "Path from home" },
+    n = { ":YankFileName<CR>", "Filename only" },
+    r = { ":YankRootRelativeFilePath<CR>", "Root-relative path" },
+    a = {
+      name = "All Files",
+      p = { ":YankAllRelativeFilePaths<CR>", "All relative paths" },
+      P = { ":YankAllAbsoluteFilePaths<CR>", "All absolute paths" },
+      n = { ":YankAllFileNames<CR>", "All filenames" },
+      r = { ":YankAllRootRelativeFilePaths<CR>", "All root-relative paths" },
+      l = { ":YankAllRelativeFilePaths \\n<CR>", "All paths (newlines)" },
+      c = { ":YankAllRelativeFilePaths ,<CR>", "All paths (commas)" },
+    },
+  },
+}, { prefix = "<leader>" })
+```
+
 
 ## Configuration
 

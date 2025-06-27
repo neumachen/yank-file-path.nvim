@@ -152,6 +152,8 @@ For multiple files:
 ==============================================================================
 5. EXAMPLES                                             *yank-file-path-examples*
 
+Basic command usage:
+
 Copy current file's relative path: >
     :YankRelativeFilePath
 <
@@ -162,6 +164,10 @@ Copy current file's absolute path: >
 
 Copy just the filename: >
     :YankFileName
+<
+
+Copy path relative to project root: >
+    :YankRootRelativeFilePath
 <
 
 Copy all relative paths separated by newlines: >
@@ -180,6 +186,64 @@ Special separators:
 - `\n` - newline character
 - `\t` - tab character
 - Any other string is used as-is
+
+                                                    *yank-file-path-keymaps*
+Key mapping examples:
+
+Basic mappings: >
+    " Single file commands
+    nnoremap <leader>yp :YankRelativeFilePath<CR>
+    nnoremap <leader>yP :YankAbsoluteFilePath<CR>
+    nnoremap <leader>yh :YankRelativeFilePathFromHome<CR>
+    nnoremap <leader>yn :YankFileName<CR>
+    nnoremap <leader>yr :YankRootRelativeFilePath<CR>
+    
+    " Multiple files commands
+    nnoremap <leader>yap :YankAllRelativeFilePaths<CR>
+    nnoremap <leader>yaP :YankAllAbsoluteFilePaths<CR>
+    nnoremap <leader>yan :YankAllFileNames<CR>
+    nnoremap <leader>yar :YankAllRootRelativeFilePaths<CR>
+<
+
+Lua key mappings: >
+    -- Single file commands
+    vim.keymap.set('n', '<leader>yp', ':YankRelativeFilePath<CR>', 
+                   { desc = 'Yank relative file path' })
+    vim.keymap.set('n', '<leader>yP', ':YankAbsoluteFilePath<CR>', 
+                   { desc = 'Yank absolute file path' })
+    vim.keymap.set('n', '<leader>yn', ':YankFileName<CR>', 
+                   { desc = 'Yank filename only' })
+    vim.keymap.set('n', '<leader>yr', ':YankRootRelativeFilePath<CR>', 
+                   { desc = 'Yank root-relative path' })
+    
+    -- Multiple files with custom separators
+    vim.keymap.set('n', '<leader>yanl', ':YankAllRelativeFilePaths \\n<CR>', 
+                   { desc = 'Yank all paths (newlines)' })
+    vim.keymap.set('n', '<leader>yac', ':YankAllRelativeFilePaths ,<CR>', 
+                   { desc = 'Yank all paths (commas)' })
+<
+
+
+Which-key integration: >
+    local wk = require("which-key")
+    
+    wk.register({
+      y = {
+        name = "Yank File Paths",
+        p = { ":YankRelativeFilePath<CR>", "Relative path" },
+        P = { ":YankAbsoluteFilePath<CR>", "Absolute path" },
+        n = { ":YankFileName<CR>", "Filename only" },
+        r = { ":YankRootRelativeFilePath<CR>", "Root-relative path" },
+        a = {
+          name = "All Files",
+          p = { ":YankAllRelativeFilePaths<CR>", "All relative paths" },
+          P = { ":YankAllAbsoluteFilePaths<CR>", "All absolute paths" },
+          n = { ":YankAllFileNames<CR>", "All filenames" },
+          r = { ":YankAllRootRelativeFilePaths<CR>", "All root-relative" },
+        },
+      },
+    }, { prefix = "<leader>" })
+<
 
 ==============================================================================
 6. CONFIGURATION                                   *yank-file-path-configuration*
