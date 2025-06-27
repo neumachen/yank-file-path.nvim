@@ -32,16 +32,50 @@ Using lazy.nvim: >
     {
         "neumachen/yank-file-path.nvim",
         config = function()
-            -- Plugin loads automatically, no configuration needed
+            require("yank-file-path").setup({
+                -- Optional: customize root markers
+                root_markers = { ".git", "package.json", "go.mod" }
+            })
         end,
     }
 <
 
+Or with minimal configuration: >
+    {
+        "neumachen/yank-file-path.nvim",
+        -- Plugin loads automatically with default settings
+    }
+<
+
 Using packer.nvim: >
+    use {
+        "neumachen/yank-file-path.nvim",
+        config = function()
+            require("yank-file-path").setup({
+                -- Optional: customize root markers
+                root_markers = { ".git", "package.json", "go.mod" }
+            })
+        end
+    }
+<
+
+Or with minimal configuration: >
     use "neumachen/yank-file-path.nvim"
 <
 
 Using vim-plug: >
+    Plug 'neumachen/yank-file-path.nvim'
+    
+    " Add to your init.lua or init.vim:
+    lua << EOF
+    require("yank-file-path").setup({
+        -- Optional: customize root markers
+        root_markers = { ".git", "package.json", "go.mod" }
+    })
+    EOF
+<
+
+Or with minimal configuration: >
     Plug 'neumachen/yank-file-path.nvim'
 <
 

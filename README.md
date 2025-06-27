@@ -21,18 +21,58 @@ A Neovim plugin that provides convenient commands to copy (yank) file paths to t
 {
     "neumachen/yank-file-path.nvim",
     config = function()
-        -- Plugin loads automatically, no configuration needed
+        require("yank-file-path").setup({
+            -- Optional: customize root markers for root-relative paths
+            root_markers = { ".git", ".hg", "package.json", "Cargo.toml", "pyproject.toml" }
+        })
     end,
+}
+```
+
+Or with minimal configuration:
+
+```lua
+{
+    "neumachen/yank-file-path.nvim",
+    -- Plugin loads automatically with default settings
 }
 ```
 
 ### Using [packer.nvim](https://github.com/wbthomason/packer.nvim)
 
 ```lua
+use {
+    "neumachen/yank-file-path.nvim",
+    config = function()
+        require("yank-file-path").setup({
+            -- Optional: customize root markers
+            root_markers = { ".git", "package.json", "go.mod" }
+        })
+    end
+}
+```
+
+Or with minimal configuration:
+
+```lua
 use "neumachen/yank-file-path.nvim"
 ```
 
 ### Using [vim-plug](https://github.com/junegunn/vim-plug)
+
+```vim
+Plug 'neumachen/yank-file-path.nvim'
+
+" Add to your init.lua or init.vim:
+lua << EOF
+require("yank-file-path").setup({
+    -- Optional: customize root markers
+    root_markers = { ".git", "package.json", "go.mod" }
+})
+EOF
+```
+
+Or with minimal configuration (uses defaults):
 
 ```vim
 Plug 'neumachen/yank-file-path.nvim'
