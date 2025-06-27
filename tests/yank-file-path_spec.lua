@@ -1,6 +1,10 @@
 -- Set test mode before requiring the plugin
 vim.env.NVIM_TEST_MODE = "1"
 
+-- Add project root to package path so we can require the plugin
+local project_root = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":h:h")
+package.path = project_root .. "/?.lua;" .. package.path
+
 local plugin = require("plugin.yank-file-path")
 
 describe("yank-file-path plugin", function()
@@ -272,6 +276,221 @@ describe("yank-file-path plugin", function()
     end)
   end)
 
+  describe("find_root_dir", function()
+    it("should find root directory with .git marker", function()
+      -- Mock vim.fn functions
+      local original_isdirectory = vim.fn.isdirectory
+      local original_filereadable = vim.fn.filereadable
+      local original_fnamemodify = vim.fn.fnamemodify
+
+      vim.fn.isdirectory = function(path)
+        if path == "/project/subdir/file.lua" then
+          return 0 -- it's a file
+        elseif path == "/project/.git" then
+          return 1 -- .git directory exists
+        else
+          return 0
+        end
+      end
+
+      vim.fn.filereadable = function(path)
+        return 0 -- no files are readable in this test
+      end
+
+      vim.fn.fnamemodify = function(path, mods)
+        if mods == ":h" then
+          if path == "/project/subdir/file.lua" then
+            return "/project/subdir"
+          elseif path == "/project/subdir" then
+            return "/project"
+          elseif path == "/project" then
+            return "/"
+          end
+        end
+        return path
+      end
+
+      local result = plugin.find_root_dir("/project/subdir/file.lua")
+      assert.equals("/project", result)
+
+      -- Restore
+      vim.fn.isdirectory = original_isdirectory
+      vim.fn.filereadable = original_filereadable
+      vim.fn.fnamemodify = original_fnamemodify
+    end)
+
+    it("should return nil when no root marker found", function()
+      -- Mock vim.fn functions
+      local original_isdirectory = vim.fn.isdirectory
+      local original_filereadable = vim.fn.filereadable
+      local original_fnamemodify = vim.fn.fnamemodify
+
+      vim.fn.isdirectory = function(path)
+        if path == "/some/file.lua" then
+          return 0 -- it's a file
+        else
+          return 0 -- no directories match
+        end
+      end
+
+      vim.fn.filereadable = function(path)
+        return 0 -- no files are readable
+      end
+
+      vim.fn.fnamemodify = function(path, mods)
+        if mods == ":h" then
+          if path == "/some/file.lua" then
+            return "/some"
+          elseif path == "/some" then
+            return "/"
+          end
+        end
+        return path
+      end
+
+      local result = plugin.find_root_dir("/some/file.lua")
+      assert.is_nil(result)
+
+      -- Restore
+      vim.fn.isdirectory = original_isdirectory
+      vim.fn.filereadable = original_filereadable
+      vim.fn.fnamemodify = original_fnamemodify
+    end)
+  end)
+
+  describe("format_path with root modifier", function()
+    it("should format path relative to root directory", function()
+      -- Mock vim.fn functions
+      local original_expand = vim.fn.expand
+      local original_isdirectory = vim.fn.isdirectory
+      local original_filereadable = vim.fn.filereadable
+      local original_fnamemodify = vim.fn.fnamemodify
+      local original_substitute = vim.fn.substitute
+      local original_resolve = vim.fn.resolve
+      local original_escape = vim.fn.escape
+
+      vim.fn.expand = function(pattern)
+        if pattern == "%" then
+          return "/project/src/file.lua"
+        end
+        return pattern
+      end
+
+      vim.fn.isdirectory = function(path)
+        if path == "/project/src/file.lua" then
+          return 0 -- it's a file
+        elseif path == "/project/.git" then
+          return 1 -- .git directory exists
+        else
+          return 0
+        end
+      end
+
+      vim.fn.filereadable = function(path)
+        return 0
+      end
+
+      vim.fn.fnamemodify = function(path, mods)
+        if mods == ":h" then
+          if path == "/project/src/file.lua" then
+            return "/project/src"
+          elseif path == "/project/src" then
+            return "/project"
+          elseif path == "/project" then
+            return "/"
+          end
+        elseif mods == ":." then
+          return "src/file.lua"
+        end
+        return path
+      end
+
+      vim.fn.resolve = function(path)
+        return path
+      end
+
+      vim.fn.escape = function(str, chars)
+        return str:gsub("([" .. chars .. "])", "\\%1")
+      end
+
+      vim.fn.substitute = function(str, pattern, replacement, flags)
+        if pattern == "^/project/" then
+          return str:gsub("^/project/", "")
+        end
+        return str
+      end
+
+      local result = plugin.format_path(":root")
+      assert.equals("src/file.lua", result)
+
+      -- Restore
+      vim.fn.expand = original_expand
+      vim.fn.isdirectory = original_isdirectory
+      vim.fn.filereadable = original_filereadable
+      vim.fn.fnamemodify = original_fnamemodify
+      vim.fn.substitute = original_substitute
+      vim.fn.resolve = original_resolve
+      vim.fn.escape = original_escape
+    end)
+
+    it("should fallback to relative path when no root found", function()
+      -- Mock vim.fn functions
+      local original_expand = vim.fn.expand
+      local original_isdirectory = vim.fn.isdirectory
+      local original_filereadable = vim.fn.filereadable
+      local original_fnamemodify = vim.fn.fnamemodify
+
+      vim.fn.expand = function(pattern)
+        if pattern == "%" then
+          return "/some/file.lua"
+        end
+        return pattern
+      end
+
+      vim.fn.isdirectory = function(path)
+        return 0 -- no directories
+      end
+
+      vim.fn.filereadable = function(path)
+        return 0 -- no files
+      end
+
+      vim.fn.fnamemodify = function(path, mods)
+        if mods == ":h" then
+          if path == "/some/file.lua" then
+            return "/some"
+          elseif path == "/some" then
+            return "/"
+          end
+        elseif mods == ":." then
+          return "file.lua"
+        end
+        return path
+      end
+
+      local result = plugin.format_path(":root")
+      assert.equals("file.lua", result)
+
+      -- Restore
+      vim.fn.expand = original_expand
+      vim.fn.isdirectory = original_isdirectory
+      vim.fn.filereadable = original_filereadable
+      vim.fn.fnamemodify = original_fnamemodify
+    end)
+  end)
+
+  describe("set_root_markers", function()
+    it("should update root markers configuration", function()
+      local original_markers = plugin.config.root_markers
+      
+      plugin.set_root_markers({ ".git", "package.json" })
+      assert.same({ ".git", "package.json" }, plugin.config.root_markers)
+      
+      -- Restore original markers
+      plugin.config.root_markers = original_markers
+    end)
+  end)
+
   describe("user commands", function()
     it("should create all expected commands", function()
       -- Check that commands exist (this is a basic integration test)
@@ -284,6 +503,8 @@ describe("yank-file-path plugin", function()
         "YankAllAbsoluteFilePaths",
         "YankAllRelativeFilePathsFromHome",
         "YankAllFileNames",
+        "YankRootRelativeFilePath",
+        "YankAllRootRelativeFilePaths",
         "YankFilePath"
       }
 
