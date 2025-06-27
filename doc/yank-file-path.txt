@@ -1,0 +1,175 @@
+*yank-file-path.txt*    Copy file paths to clipboard for Neovim
+
+Author: Kareem Hepburn
+License: MIT
+Version: 1.0.0
+
+==============================================================================
+CONTENTS                                                *yank-file-path-contents*
+
+1. Introduction ............................ |yank-file-path-introduction|
+2. Installation ............................ |yank-file-path-installation|
+3. Commands ................................ |yank-file-path-commands|
+4. Usage ................................... |yank-file-path-usage|
+5. Examples ................................ |yank-file-path-examples|
+6. Configuration ........................... |yank-file-path-configuration|
+7. License ................................. |yank-file-path-license|
+
+==============================================================================
+1. INTRODUCTION                                     *yank-file-path-introduction*
+
+yank-file-path.nvim is a Neovim plugin that provides convenient commands to
+copy file paths to the system clipboard. It supports various path formats
+including relative paths, absolute paths, and file names only.
+
+The plugin also supports copying multiple buffer paths at once with
+customizable separators.
+
+==============================================================================
+2. INSTALLATION                                     *yank-file-path-installation*
+
+Using lazy.nvim: >
+    {
+        "neumachen/yank-file-path.nvim",
+        config = function()
+            -- Plugin loads automatically, no configuration needed
+        end,
+    }
+<
+
+Using packer.nvim: >
+    use "neumachen/yank-file-path.nvim"
+<
+
+Using vim-plug: >
+    Plug 'neumachen/yank-file-path.nvim'
+<
+
+==============================================================================
+3. COMMANDS                                             *yank-file-path-commands*
+
+The plugin provides the following commands:
+
+                                                    *:YankRelativeFilePath*
+:YankRelativeFilePath
+    Copy the relative file path of the current buffer to the clipboard.
+    The path is relative to the current working directory.
+
+                                                    *:YankAbsoluteFilePath*
+:YankAbsoluteFilePath
+    Copy the absolute file path of the current buffer to the clipboard.
+
+                                            *:YankRelativeFilePathFromHome*
+:YankRelativeFilePathFromHome
+    Copy the file path relative to the home directory (~) to the clipboard.
+
+                                                           *:YankFileName*
+:YankFileName
+    Copy only the file name (without directory path) to the clipboard.
+
+                                                   *:YankAllRelativeFilePaths*
+:YankAllRelativeFilePaths [separator]
+    Copy all relative file paths of loaded buffers to the clipboard.
+    Optional separator can be specified (default is space).
+
+                                                   *:YankAllAbsoluteFilePaths*
+:YankAllAbsoluteFilePaths [separator]
+    Copy all absolute file paths of loaded buffers to the clipboard.
+    Optional separator can be specified (default is space).
+
+                                           *:YankAllRelativeFilePathsFromHome*
+:YankAllRelativeFilePathsFromHome [separator]
+    Copy all file paths relative to home directory of loaded buffers.
+    Optional separator can be specified (default is space).
+
+                                                          *:YankAllFileNames*
+:YankAllFileNames [separator]
+    Copy all file names of loaded buffers to the clipboard.
+    Optional separator can be specified (default is space).
+
+                                                           *:YankFilePath*
+:YankFilePath
+    Alias for :YankRelativeFilePath
+
+==============================================================================
+4. USAGE                                                   *yank-file-path-usage*
+
+Basic usage:
+1. Open a file in Neovim
+2. Run any of the copy commands
+3. The file path will be copied to your system clipboard
+4. You'll see a notification confirming the copy operation
+
+For multiple files:
+1. Open multiple files in buffers
+2. Use any of the "CopyAll*" commands
+3. All loaded buffer paths will be copied with the specified separator
+
+==============================================================================
+5. EXAMPLES                                             *yank-file-path-examples*
+
+Copy current file's relative path: >
+    :YankRelativeFilePath
+<
+
+Copy current file's absolute path: >
+    :YankAbsoluteFilePath
+<
+
+Copy just the filename: >
+    :YankFileName
+<
+
+Copy all relative paths separated by newlines: >
+    :YankAllRelativeFilePaths \n
+<
+
+Copy all filenames separated by commas: >
+    :YankAllFileNames ,
+<
+
+Copy all absolute paths separated by tabs: >
+    :YankAllAbsoluteFilePaths \t
+<
+
+Special separators:
+- `\n` - newline character
+- `\t` - tab character
+- Any other string is used as-is
+
+==============================================================================
+6. CONFIGURATION                                   *yank-file-path-configuration*
+
+The plugin works out of the box without any configuration. All commands are
+automatically available after the plugin is loaded.
+
+The plugin uses `vim.notify()` for notifications with INFO level for successful
+operations and WARN level for warnings (e.g., when no buffers are found).
+
+==============================================================================
+7. LICENSE                                               *yank-file-path-license*
+
+MIT License
+
+Copyright (c) 2025 Kareem Hepburn
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
