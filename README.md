@@ -91,6 +91,16 @@ Plug 'neumachen/yank-file-path.nvim'
 | `:YankRootRelativeFilePath` | Copy path relative to project root | `src/main.lua` |
 | `:YankFilePath` | Alias for `:YankRelativeFilePath` | `src/main.lua` |
 
+### Single File Commands with Line Numbers
+
+| Command | Description | Example Output |
+|---------|-------------|----------------|
+| `:YankRelativeFilePathWithLine` | Copy relative file path with line number | `src/main.lua:42` |
+| `:YankAbsoluteFilePathWithLine` | Copy absolute file path with line number | `/home/user/project/src/main.lua:42` |
+| `:YankRelativeFilePathFromHomeWithLine` | Copy path relative to home with line number | `~/project/src/main.lua:42` |
+| `:YankFileNameWithLine` | Copy filename with line number | `main.lua:42` |
+| `:YankRootRelativeFilePathWithLine` | Copy path relative to project root with line number | `src/main.lua:42` |
+
 ### Multiple Files Commands
 
 | Command | Description | Default Separator |
@@ -149,6 +159,13 @@ vim.keymap.set('n', '<leader>yh', ':YankRelativeFilePathFromHome<CR>', { desc = 
 vim.keymap.set('n', '<leader>yn', ':YankFileName<CR>', { desc = 'Yank filename only' })
 vim.keymap.set('n', '<leader>yr', ':YankRootRelativeFilePath<CR>', { desc = 'Yank root-relative path' })
 
+-- Single file commands with line numbers
+vim.keymap.set('n', '<leader>ypl', ':YankRelativeFilePathWithLine<CR>', { desc = 'Yank relative path with line' })
+vim.keymap.set('n', '<leader>yPl', ':YankAbsoluteFilePathWithLine<CR>', { desc = 'Yank absolute path with line' })
+vim.keymap.set('n', '<leader>yhl', ':YankRelativeFilePathFromHomeWithLine<CR>', { desc = 'Yank path from home with line' })
+vim.keymap.set('n', '<leader>ynl', ':YankFileNameWithLine<CR>', { desc = 'Yank filename with line' })
+vim.keymap.set('n', '<leader>yrl', ':YankRootRelativeFilePathWithLine<CR>', { desc = 'Yank root-relative path with line' })
+
 -- Multiple files commands
 vim.keymap.set('n', '<leader>yap', ':YankAllRelativeFilePaths<CR>', { desc = 'Yank all relative paths' })
 vim.keymap.set('n', '<leader>yaP', ':YankAllAbsoluteFilePaths<CR>', { desc = 'Yank all absolute paths' })
@@ -184,6 +201,14 @@ wk.register({
     h = { ":YankRelativeFilePathFromHome<CR>", "Path from home" },
     n = { ":YankFileName<CR>", "Filename only" },
     r = { ":YankRootRelativeFilePath<CR>", "Root-relative path" },
+    l = {
+      name = "With Line Numbers",
+      p = { ":YankRelativeFilePathWithLine<CR>", "Relative path with line" },
+      P = { ":YankAbsoluteFilePathWithLine<CR>", "Absolute path with line" },
+      h = { ":YankRelativeFilePathFromHomeWithLine<CR>", "Path from home with line" },
+      n = { ":YankFileNameWithLine<CR>", "Filename with line" },
+      r = { ":YankRootRelativeFilePathWithLine<CR>", "Root-relative path with line" },
+    },
     a = {
       name = "All Files",
       p = { ":YankAllRelativeFilePaths<CR>", "All relative paths" },

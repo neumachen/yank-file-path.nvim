@@ -5,7 +5,7 @@ vim.env.NVIM_TEST_MODE = "1"
 local project_root = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":h:h")
 package.path = project_root .. "/?.lua;" .. package.path
 
-local plugin = require("plugin.yank-file-path")
+local plugin = require("yank-file-path")
 
 describe("yank-file-path plugin", function()
   local original_notify
@@ -80,6 +80,41 @@ describe("yank-file-path plugin", function()
       assert.equals("path.lua", result)
 
       vim.fn.fnamemodify = original_fnamemodify
+    end)
+
+    it("should include line number when requested", function()
+      local original_expand = vim.fn.expand
+      local original_fnamemodify = vim.fn.fnamemodify
+      local original_line = vim.fn.line
+      
+      vim.fn.expand = function(pattern)
+        if pattern == "%" then
+          return "/home/user/project/file.lua"
+        end
+        return pattern
+      end
+      
+      vim.fn.fnamemodify = function(path, mods)
+        if mods == ":." then
+          return "project/file.lua"
+        end
+        return path
+      end
+
+      vim.fn.line = function(expr)
+        if expr == "." then
+          return 42
+        end
+        return 1
+      end
+
+      local result = plugin.format_path(":.", nil, true)
+      assert.equals("project/file.lua:42", result)
+
+      -- Restore
+      vim.fn.expand = original_expand
+      vim.fn.fnamemodify = original_fnamemodify
+      vim.fn.line = original_line
     end)
   end)
 
@@ -542,6 +577,11 @@ describe("yank-file-path plugin", function()
         "YankAbsoluteFilePath", 
         "YankRelativeFilePathFromHome",
         "YankFileName",
+        "YankRelativeFilePathWithLine",
+        "YankAbsoluteFilePathWithLine",
+        "YankRelativeFilePathFromHomeWithLine",
+        "YankFileNameWithLine",
+        "YankRootRelativeFilePathWithLine",
         "YankAllRelativeFilePaths",
         "YankAllAbsoluteFilePaths",
         "YankAllRelativeFilePathsFromHome",

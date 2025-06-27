@@ -106,6 +106,31 @@ The plugin provides the following commands:
     Copy the file path relative to the project root directory to the clipboard.
     The root is determined by searching for root markers like .git, package.json, etc.
 
+                                          *:YankRelativeFilePathWithLine*
+:YankRelativeFilePathWithLine
+    Copy the relative file path with current line number to the clipboard.
+    Format: path/to/file.ext:42
+
+                                          *:YankAbsoluteFilePathWithLine*
+:YankAbsoluteFilePathWithLine
+    Copy the absolute file path with current line number to the clipboard.
+    Format: /full/path/to/file.ext:42
+
+                                  *:YankRelativeFilePathFromHomeWithLine*
+:YankRelativeFilePathFromHomeWithLine
+    Copy the file path relative to home with current line number to the clipboard.
+    Format: ~/path/to/file.ext:42
+
+                                                   *:YankFileNameWithLine*
+:YankFileNameWithLine
+    Copy the filename with current line number to the clipboard.
+    Format: file.ext:42
+
+                                         *:YankRootRelativeFilePathWithLine*
+:YankRootRelativeFilePathWithLine
+    Copy the file path relative to project root with current line number.
+    Format: src/file.ext:42
+
                                                    *:YankAllRelativeFilePaths*
 :YankAllRelativeFilePaths [separator]
     Copy all relative file paths of loaded buffers to the clipboard.
@@ -170,6 +195,18 @@ Copy path relative to project root: >
     :YankRootRelativeFilePath
 <
 
+Copy relative path with line number: >
+    :YankRelativeFilePathWithLine
+<
+
+Copy absolute path with line number: >
+    :YankAbsoluteFilePathWithLine
+<
+
+Copy filename with line number: >
+    :YankFileNameWithLine
+<
+
 Copy all relative paths separated by newlines: >
     :YankAllRelativeFilePaths \n
 <
@@ -198,6 +235,13 @@ Basic mappings: >
     nnoremap <leader>yn :YankFileName<CR>
     nnoremap <leader>yr :YankRootRelativeFilePath<CR>
     
+    " Single file commands with line numbers
+    nnoremap <leader>ypl :YankRelativeFilePathWithLine<CR>
+    nnoremap <leader>yPl :YankAbsoluteFilePathWithLine<CR>
+    nnoremap <leader>yhl :YankRelativeFilePathFromHomeWithLine<CR>
+    nnoremap <leader>ynl :YankFileNameWithLine<CR>
+    nnoremap <leader>yrl :YankRootRelativeFilePathWithLine<CR>
+    
     " Multiple files commands
     nnoremap <leader>yap :YankAllRelativeFilePaths<CR>
     nnoremap <leader>yaP :YankAllAbsoluteFilePaths<CR>
@@ -215,6 +259,16 @@ Lua key mappings: >
                    { desc = 'Yank filename only' })
     vim.keymap.set('n', '<leader>yr', ':YankRootRelativeFilePath<CR>', 
                    { desc = 'Yank root-relative path' })
+    
+    -- Single file commands with line numbers
+    vim.keymap.set('n', '<leader>ypl', ':YankRelativeFilePathWithLine<CR>', 
+                   { desc = 'Yank relative path with line' })
+    vim.keymap.set('n', '<leader>yPl', ':YankAbsoluteFilePathWithLine<CR>', 
+                   { desc = 'Yank absolute path with line' })
+    vim.keymap.set('n', '<leader>ynl', ':YankFileNameWithLine<CR>', 
+                   { desc = 'Yank filename with line' })
+    vim.keymap.set('n', '<leader>yrl', ':YankRootRelativeFilePathWithLine<CR>', 
+                   { desc = 'Yank root-relative path with line' })
     
     -- Multiple files with custom separators
     vim.keymap.set('n', '<leader>yanl', ':YankAllRelativeFilePaths \\n<CR>', 
