@@ -67,6 +67,11 @@ The plugin provides the following commands:
 :YankFileName
     Copy only the file name (without directory path) to the clipboard.
 
+                                                 *:YankRootRelativeFilePath*
+:YankRootRelativeFilePath
+    Copy the file path relative to the project root directory to the clipboard.
+    The root is determined by searching for root markers like .git, package.json, etc.
+
                                                    *:YankAllRelativeFilePaths*
 :YankAllRelativeFilePaths [separator]
     Copy all relative file paths of loaded buffers to the clipboard.
@@ -85,6 +90,11 @@ The plugin provides the following commands:
                                                           *:YankAllFileNames*
 :YankAllFileNames [separator]
     Copy all file names of loaded buffers to the clipboard.
+    Optional separator can be specified (default is space).
+
+                                             *:YankAllRootRelativeFilePaths*
+:YankAllRootRelativeFilePaths [separator]
+    Copy all file paths relative to project root of loaded buffers.
     Optional separator can be specified (default is space).
 
                                                            *:YankFilePath*
@@ -142,6 +152,24 @@ Special separators:
 
 The plugin works out of the box without any configuration. All commands are
 automatically available after the plugin is loaded.
+
+                                                        *yank-file-path-setup*
+Setup function:
+>
+    require("yank-file-path").setup({
+        root_markers = { ".git", "package.json", "go.mod" }
+    })
+<
+
+Configuration options:
+- `root_markers` (table): List of files/directories to search for when
+  determining project root. Default: { ".git", ".hg", ".svn", "package.json",
+  "Cargo.toml", "go.mod", "pyproject.toml", "Makefile" }
+
+Runtime configuration:
+>
+    require("yank-file-path").set_root_markers({ ".git", "custom.toml" })
+<
 
 The plugin uses `vim.notify()` for notifications with INFO level for successful
 operations and WARN level for warnings (e.g., when no buffers are found).

@@ -479,15 +479,58 @@ describe("yank-file-path plugin", function()
     end)
   end)
 
+  describe("setup", function()
+    local original_config
+    
+    before_each(function()
+      -- Save the original config state
+      original_config = vim.deepcopy(plugin.config)
+    end)
+    
+    after_each(function()
+      -- Restore the original config state
+      for k, v in pairs(original_config) do
+        plugin.config[k] = v
+      end
+    end)
+
+    it("should use default configuration when no config provided", function()
+      plugin.setup()
+      assert.same(plugin.default_config.root_markers, plugin.config.root_markers)
+    end)
+
+    it("should merge user configuration with defaults", function()
+      plugin.setup({
+        root_markers = { ".git", "custom.toml" }
+      })
+      assert.same({ ".git", "custom.toml" }, plugin.config.root_markers)
+    end)
+
+    it("should handle partial configuration", function()
+      -- Test with empty config
+      plugin.setup({})
+      assert.same(plugin.default_config.root_markers, plugin.config.root_markers)
+    end)
+  end)
+
   describe("set_root_markers", function()
+    local original_config
+    
+    before_each(function()
+      -- Save the original config state
+      original_config = vim.deepcopy(plugin.config)
+    end)
+    
+    after_each(function()
+      -- Restore the original config state
+      for k, v in pairs(original_config) do
+        plugin.config[k] = v
+      end
+    end)
+
     it("should update root markers configuration", function()
-      local original_markers = plugin.config.root_markers
-      
       plugin.set_root_markers({ ".git", "package.json" })
       assert.same({ ".git", "package.json" }, plugin.config.root_markers)
-      
-      -- Restore original markers
-      plugin.config.root_markers = original_markers
     end)
   end)
 

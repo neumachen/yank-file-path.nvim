@@ -46,6 +46,7 @@ Plug 'neumachen/yank-file-path.nvim'
 | `:YankAbsoluteFilePath` | Copy absolute file path | `/home/user/project/src/main.lua` |
 | `:YankRelativeFilePathFromHome` | Copy path relative to home | `~/project/src/main.lua` |
 | `:YankFileName` | Copy just the filename | `main.lua` |
+| `:YankRootRelativeFilePath` | Copy path relative to project root | `src/main.lua` |
 | `:YankFilePath` | Alias for `:YankRelativeFilePath` | `src/main.lua` |
 
 ### Multiple Files Commands
@@ -56,6 +57,7 @@ Plug 'neumachen/yank-file-path.nvim'
 | `:YankAllAbsoluteFilePaths [separator]` | Copy all absolute paths | space |
 | `:YankAllRelativeFilePathsFromHome [separator]` | Copy all paths from home | space |
 | `:YankAllFileNames [separator]` | Copy all filenames | space |
+| `:YankAllRootRelativeFilePaths [separator]` | Copy all root-relative paths | space |
 
 ## Usage Examples
 
@@ -106,6 +108,47 @@ vim.keymap.set('n', '<leader>ya', ':YankAllRelativeFilePaths<CR>', { desc = 'Yan
 ## Configuration
 
 The plugin works out of the box without any configuration. All commands are automatically available after the plugin is loaded.
+
+### Custom Root Markers
+
+You can customize the root markers used for root-relative path detection:
+
+```lua
+-- Using lazy.nvim
+{
+    "neumachen/yank-file-path.nvim",
+    config = function()
+        require("yank-file-path").setup({
+            root_markers = { ".git", ".hg", "package.json", "Cargo.toml", "pyproject.toml" }
+        })
+    end,
+}
+
+-- Or call setup directly
+require("yank-file-path").setup({
+    root_markers = { ".git", "package.json", "go.mod" }
+})
+```
+
+### Default Root Markers
+
+The plugin comes with these default root markers:
+- `.git`
+- `.hg` 
+- `.svn`
+- `package.json`
+- `Cargo.toml`
+- `go.mod`
+- `pyproject.toml`
+- `Makefile`
+
+### Runtime Configuration
+
+You can also change root markers at runtime:
+
+```lua
+require("yank-file-path").set_root_markers({ ".git", "custom.toml" })
+```
 
 ### Notifications
 

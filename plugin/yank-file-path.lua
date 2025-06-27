@@ -1,7 +1,32 @@
--- Configuration for root markers
-local config = {
+-- Default configuration
+local default_config = {
   root_markers = { ".git", ".hg", ".svn", "package.json", "Cargo.toml", "go.mod", "pyproject.toml", "Makefile" }
 }
+
+-- Current configuration (starts with defaults)
+local config = vim.deepcopy(default_config)
+
+---@param user_config table|nil user configuration options
+local function setup(user_config)
+  if user_config then
+    local new_config = vim.tbl_deep_extend("force", default_config, user_config)
+    -- Clear existing config and copy new values to maintain reference
+    for k in pairs(config) do
+      config[k] = nil
+    end
+    for k, v in pairs(new_config) do
+      config[k] = v
+    end
+  else
+    -- Reset to defaults
+    for k in pairs(config) do
+      config[k] = nil
+    end
+    for k, v in pairs(default_config) do
+      config[k] = v
+    end
+  end
+end
 
 ---@param markers string[] list of root markers to search for
 local function set_root_markers(markers)
@@ -15,7 +40,7 @@ local function find_root_dir(start_path)
   if vim.fn.isdirectory(path) == 0 then
     path = vim.fn.fnamemodify(path, ":h")
   end
-  
+
   while path ~= "/" and path ~= "" do
     for _, marker in ipairs(config.root_markers) do
       local marker_path = path .. "/" .. marker
@@ -29,7 +54,7 @@ local function find_root_dir(start_path)
     end
     path = parent
   end
-  
+
   return nil
 end
 
@@ -39,7 +64,7 @@ end
 ---see: https://vim-jp.org/vimdoc-ja/cmdline.html#filename-modifiers
 local function format_path(mods, buf_path)
   local path = buf_path or vim.fn.expand("%")
-  
+
   if mods == ":root" then
     local root_dir = find_root_dir(path)
     if root_dir then
@@ -145,16 +170,21 @@ end, { nargs = "?", force = true, desc = "Copy all root-relative file paths to t
 
 vim.cmd("command! YankFilePath YankRelativeFilePath")
 
--- Export functions for testing
+-- Export functions for testing and public API
+local M = {
+  setup = setup,
+  set_root_markers = set_root_markers,
+}
+
 if vim.env.NVIM_TEST_MODE then
-  return {
-    format_path = format_path,
-    parse_separator = parse_separator,
-    get_all_buffer_paths = get_all_buffer_paths,
-    copy_to_clipboard = copy_to_clipboard,
-    copy_all_buffer_paths = copy_all_buffer_paths,
-    find_root_dir = find_root_dir,
-    set_root_markers = set_root_markers,
-    config = config,
-  }
+  M.format_path = format_path
+  M.parse_separator = parse_separator
+  M.get_all_buffer_paths = get_all_buffer_paths
+  M.copy_to_clipboard = copy_to_clipboard
+  M.copy_all_buffer_paths = copy_all_buffer_paths
+  M.find_root_dir = find_root_dir
+  M.config = config
+  M.default_config = default_config
 end
+
+return M
