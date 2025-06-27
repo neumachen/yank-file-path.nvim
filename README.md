@@ -291,8 +291,14 @@ nvim --headless -c "PlenaryBustedDirectory tests/ {minimal_init = 'tests/minimal
 yank-file-path.nvim/
 ├── doc/
 │   └── yank-file-path.txt      # Vim help documentation
+├── lua/
+│   └── yank-file-path/
+│       ├── init.lua            # Main module entry point
+│       ├── config.lua          # Configuration management
+│       ├── utils.lua           # Core utility functions
+│       └── commands.lua        # User command definitions
 ├── plugin/
-│   └── yank-file-path.lua      # Main plugin code
+│   └── yank-file-path.lua      # Plugin loader
 ├── tests/
 │   ├── yank-file-path_spec.lua # Test suite
 │   └── minimal_init.lua        # Minimal init for testing

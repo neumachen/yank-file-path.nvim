@@ -28,12 +28,11 @@ jobs:
     
     - name: Run tests
       run: |
-        cd tests
-        nvim --headless -c "PlenaryBustedDirectory ." -c "qa!"
+        nvim --headless -u tests/minimal_init.lua -c "PlenaryBustedDirectory tests/" -c "qa!"
     
     - name: Check plugin loads without errors
       run: |
-        nvim --headless -c "lua require('plugin.yank-file-path')" -c "qa!"
+        nvim --headless -c "lua require('yank-file-path')" -c "qa!"
 
   lint:
     runs-on: ubuntu-latest
@@ -56,4 +55,4 @@ jobs:
       run: luarocks install luacheck
     
     - name: Run luacheck
-      run: luacheck plugin/ --globals vim
+      run: luacheck plugin/ lua/ --globals vim

@@ -23,7 +23,8 @@ copy file paths to the system clipboard. It supports various path formats
 including relative paths, absolute paths, and file names only.
 
 The plugin also supports copying multiple buffer paths at once with
-customizable separators.
+customizable separators. The plugin is built with a modular architecture
+for maintainability and extensibility.
 
 ==============================================================================
 2. INSTALLATION                                     *yank-file-path-installation*
