@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        neovim_version: ['stable', 'nightly']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Neovim
+      uses: rhysd/action-setup-vim@v1 
+      with:
+        neovim: true
+        version: ${{ matrix.neovim_version }}
+    
+    - name: Install plenary.nvim
+      run: |
+        git clone --depth 1 https://github.com/nvim-lua/plenary.nvim ~/.local/share/nvim/site/pack/vendor/start/plenary.nvim
+    
+    - name: Run tests
+      run: |
+        cd tests
+        nvim --headless -c "PlenaryBustedDirectory ." -c "qa!"
+    
+    - name: Check plugin loads without errors
+      run: |
+        nvim --headless -c "lua require('plugin.yank-file-path')" -c "qa!"
+
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        lua_version: ['5.1', '5.2', '5.3', '5.4']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Lua
+      uses: leafo/gh-actions-lua@v10
+      with:
+        luaVersion: ${{ matrix.lua_version }}
+    
+    - name: Install LuaRocks
+      uses: leafo/gh-actions-luarocks@v4
+    
+    - name: Install luacheck
+      run: luarocks install luacheck
+    
+    - name: Run luacheck
+      run: luacheck plugin/ --globals vim

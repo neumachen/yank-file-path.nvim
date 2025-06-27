@@ -1,5 +1,7 @@
 # yank-file-path.nvim
 
+[![CI](https://github.com/neumachen/yank-file-path.nvim/actions/workflows/ci.yml/badge.svg)](https://github.com/neumachen/yank-file-path.nvim/actions/workflows/ci.yml)
+
 A Neovim plugin that provides convenient commands to copy (yank) file paths to the system clipboard. Supports various path formats including relative paths, absolute paths, and file names only.
 
 ## Features
