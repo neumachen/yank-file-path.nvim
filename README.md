@@ -6,12 +6,16 @@ A Neovim plugin that provides convenient commands to copy (yank) file paths to t
 
 ## Features
 
-- 🚀 Copy current file path in multiple formats
-- 📁 Copy multiple buffer paths at once
-- 🔧 Customizable separators for multiple paths
-- 📋 Automatic clipboard integration
+- 🚀 Copy current file path in multiple formats (relative, absolute, from home, filename only)
+- 🎯 Copy file paths relative to project root (auto-detects .git, package.json, etc.)
+- 📍 Copy file paths with current line numbers for precise referencing
+- 📁 Copy multiple buffer paths at once with customizable separators
+- 🔧 Configurable root markers for project detection
+- 📋 Automatic system clipboard integration
 - 🔔 Visual feedback with notifications
-- 📚 Comprehensive documentation
+- ⚙️ Runtime configuration support
+- 📚 Comprehensive documentation and help files
+- 🧪 Fully tested with comprehensive test suite
 
 ## Installation
 
