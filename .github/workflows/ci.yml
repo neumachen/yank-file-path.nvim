@@ -38,6 +38,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           version: latest
+          args: --check .
 
       - name: Install plenary.nvim
         run: |
