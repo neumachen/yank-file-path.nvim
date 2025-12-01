@@ -48,7 +48,14 @@ jobs:
         run: luacheck lua/ tests/ --config .luacheckrc
 
       - name: Check formatting
-        run: stylua --check lua/ tests/ --config-path stylua.toml
+        run: |
+          # Check if there are any Lua files to format
+          if find lua tests -name "*.lua" -type f | grep -q .; then
+            stylua --check lua/ tests/ --config-path stylua.toml
+          else
+            echo "No Lua files found to check formatting"
+            exit 1
+          fi
 
       - name: Run tests
         run: |
