@@ -1,7 +1,7 @@
 -- Default configuration
 local default_config = {
   root_markers = { ".git" },
-  enable_default_mappings = true
+  enable_default_mappings = true,
 }
 
 -- Current configuration (starts with defaults)

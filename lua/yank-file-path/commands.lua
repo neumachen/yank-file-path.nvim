@@ -9,7 +9,7 @@ local function parse_args(args)
     range = false,
     all = false,
     separator = " ",
-    root_marker = nil
+    root_marker = nil,
   }
 
   local parts = vim.split(args, "%s+")
@@ -57,7 +57,7 @@ local function format_to_modifier(format)
     absolute = ":p",
     filename = ":t",
     home = ":~",
-    root = ":root"
+    root = ":root",
   }
 
   return format_map[format] or ":."
@@ -96,7 +96,7 @@ end, {
     return vim.tbl_filter(function(item)
       return item:find(arg_lead, 1, true) == 1
     end, completions)
-  end
+  end,
 })
 
 -- Legacy command aliases for backward compatibility
