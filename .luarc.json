@@ -1,0 +1,56 @@
+{
+  "runtime.version": "LuaJIT",
+  "runtime.path": [
+    "lua/?.lua",
+    "lua/?/init.lua"
+  ],
+  "diagnostics": {
+    "enable": true,
+    "globals": [
+      "vim",
+      "describe",
+      "it",
+      "before_each",
+      "after_each",
+      "assert",
+      "pending",
+      "setup",
+      "teardown"
+    ]
+  },
+  "workspace": {
+    "library": [
+      "${3rd}/luv/library",
+      "${3rd}/busted/library",
+      "${3rd}/luassert/library"
+    ],
+    "maxPreload": 100000,
+    "preloadFileSize": 10000,
+    "checkThirdParty": false
+  },
+  "completion": {
+    "enable": true,
+    "callSnippet": "Both"
+  },
+  "telemetry": {
+    "enable": false
+  },
+  "hint": {
+    "enable": true,
+    "arrayIndex": "Auto",
+    "await": true,
+    "paramName": "All",
+    "paramType": true,
+    "semicolon": "SameLine",
+    "setType": false
+  },
+  "format": {
+    "enable": false
+  },
+  "type": {
+    "castNumberToInteger": true
+  },
+  "spell": [
+    "utf8"
+  ]
+}

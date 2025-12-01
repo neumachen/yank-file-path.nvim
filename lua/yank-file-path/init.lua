@@ -1,13 +1,20 @@
 local config_module = require("yank-file-path.config")
 local utils = require("yank-file-path.utils")
+local mappings = require("yank-file-path.mappings")
 
 -- Load commands
 require("yank-file-path.commands")
+
+-- Set up default mappings if enabled
+if config_module.config.enable_default_mappings then
+  mappings.setup_mappings()
+end
 
 -- Export public API
 local M = {
   setup = config_module.setup,
   set_root_markers = config_module.set_root_markers,
+  setup_mappings = mappings.setup_mappings,
 }
 
 -- Export functions for testing

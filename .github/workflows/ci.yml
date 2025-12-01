@@ -2,57 +2,85 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        neovim_version: ['stable', 'nightly']
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install Neovim
-      uses: rhysd/action-setup-vim@v1 
-      with:
-        neovim: true
-        version: ${{ matrix.neovim_version }}
-    
-    - name: Install plenary.nvim
-      run: |
-        git clone --depth 1 https://github.com/nvim-lua/plenary.nvim ~/.local/share/nvim/site/pack/vendor/start/plenary.nvim
-    
-    - name: Run tests
-      run: |
-        nvim --headless -u tests/minimal_init.lua -c "PlenaryBustedDirectory tests/" -c "qa!"
-    
-    - name: Check plugin loads without errors
-      run: |
-        nvim --headless -c "lua require('yank-file-path')" -c "qa!"
+        neovim_version: ["v0.10.0", "v0.11.0", "nightly"]
 
-  lint:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        lua_version: ['5.1', '5.2', '5.3', '5.4']
-    
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install Lua
-      uses: leafo/gh-actions-lua@v10
-      with:
-        luaVersion: ${{ matrix.lua_version }}
-    
-    - name: Install LuaRocks
-      uses: leafo/gh-actions-luarocks@v4
-    
-    - name: Install luacheck
-      run: luarocks install luacheck
-    
-    - name: Run luacheck
-      run: luacheck plugin/ lua/ --globals vim
+      - uses: actions/checkout@v4
+
+      - name: Install Neovim
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: ${{ matrix.neovim_version }}
+
+      - name: Install Lua
+        uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: "5.1"
+
+      - name: Install Luarocks
+        uses: leafo/gh-actions-luarocks@v4
+
+      - name: Install luacheck
+        run: luarocks install luacheck
+
+      - name: Install stylua
+        uses: JohnnyMorganz/stylua-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: latest
+
+      - name: Install plenary.nvim
+        run: |
+          mkdir -p ~/.local/share/nvim/site/pack/vendor/start/
+          git clone --depth 1 https://github.com/nvim-lua/plenary.nvim ~/.local/share/nvim/site/pack/vendor/start/plenary.nvim
+
+      - name: Run luacheck
+        run: luacheck lua/ tests/ --config .luacheckrc
+
+      - name: Check formatting
+        run: stylua --check lua/ tests/ --config-path stylua.toml
+
+      - name: Run tests
+        run: |
+          nvim --version
+          make test
+
+  release:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if version changed
+        id: version_check
+        run: |
+          if git diff HEAD~1 HEAD --name-only | grep -q "lua/yank-file-path/init.lua\|README.md"; then
+            echo "version_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "version_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        if: steps.version_check.outputs.version_changed == 'true'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release v${{ github.run_number }}
+          draft: false
+          prerelease: false

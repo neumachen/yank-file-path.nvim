@@ -43,19 +43,19 @@ describe("yank-file-path plugin", function()
       -- Mock vim.fn.expand and vim.fn.fnamemodify
       local original_expand = vim.fn.expand
       local original_fnamemodify = vim.fn.fnamemodify
-      
+
       vim.fn.expand = function(pattern)
         if pattern == "%" then
           return "/home/user/project/file.lua"
         end
         return pattern
       end
-      
-      vim.fn.fnamemodify = function(path, mods)
+
+      vim.fn.fnamemodify = function(_path, mods)
         if mods == ":." then
           return "project/file.lua"
         end
-        return path
+        return _path
       end
 
       local result = plugin.format_path(":.")
@@ -68,12 +68,12 @@ describe("yank-file-path plugin", function()
 
     it("should use provided buf_path when given", function()
       local original_fnamemodify = vim.fn.fnamemodify
-      
-      vim.fn.fnamemodify = function(path, mods)
-        if path == "/custom/path.lua" and mods == ":t" then
+
+      vim.fn.fnamemodify = function(_path, mods)
+        if _path == "/custom/path.lua" and mods == ":t" then
           return "path.lua"
         end
-        return path
+        return _path
       end
 
       local result = plugin.format_path(":t", "/custom/path.lua")
@@ -86,19 +86,19 @@ describe("yank-file-path plugin", function()
       local original_expand = vim.fn.expand
       local original_fnamemodify = vim.fn.fnamemodify
       local original_line = vim.fn.line
-      
+
       vim.fn.expand = function(pattern)
         if pattern == "%" then
           return "/home/user/project/file.lua"
         end
         return pattern
       end
-      
-      vim.fn.fnamemodify = function(path, mods)
+
+      vim.fn.fnamemodify = function(_path, mods)
         if mods == ":." then
           return "project/file.lua"
         end
-        return path
+        return _path
       end
 
       vim.fn.line = function(expr)
@@ -115,6 +115,96 @@ describe("yank-file-path plugin", function()
       vim.fn.expand = original_expand
       vim.fn.fnamemodify = original_fnamemodify
       vim.fn.line = original_line
+    end)
+
+    it("should include range when requested", function()
+      local original_expand = vim.fn.expand
+      local original_fnamemodify = vim.fn.fnamemodify
+      local original_line = vim.fn.line
+      local original_mode = vim.fn.mode
+
+      vim.fn.expand = function(pattern)
+        if pattern == "%" then
+          return "/home/user/project/file.lua"
+        end
+        return pattern
+      end
+
+      vim.fn.fnamemodify = function(_path, mods)
+        if mods == ":." then
+          return "project/file.lua"
+        end
+        return _path
+      end
+
+      vim.fn.line = function(expr)
+        if expr == "'<" then
+          return 10
+        elseif expr == "'>" then
+          return 20
+        elseif expr == "." then
+          return 15
+        end
+        return 1
+      end
+
+      vim.fn.mode = function()
+        return "V" -- Visual line mode
+      end
+
+      local result = plugin.format_path(":.", nil, false, true)
+      assert.equals("project/file.lua:10-20", result)
+
+      -- Restore
+      vim.fn.expand = original_expand
+      vim.fn.fnamemodify = original_fnamemodify
+      vim.fn.line = original_line
+      vim.fn.mode = original_mode
+    end)
+
+    it("should include single line range when start equals end", function()
+      local original_expand = vim.fn.expand
+      local original_fnamemodify = vim.fn.fnamemodify
+      local original_line = vim.fn.line
+      local original_mode = vim.fn.mode
+
+      vim.fn.expand = function(pattern)
+        if pattern == "%" then
+          return "/home/user/project/file.lua"
+        end
+        return pattern
+      end
+
+      vim.fn.fnamemodify = function(path, mods)
+        if mods == ":." then
+          return "project/file.lua"
+        end
+        return path
+      end
+
+      vim.fn.line = function(expr)
+        if expr == "'<" then
+          return 15
+        elseif expr == "'>" then
+          return 15
+        elseif expr == "." then
+          return 15
+        end
+        return 1
+      end
+
+      vim.fn.mode = function()
+        return "V" -- Visual line mode
+      end
+
+      local result = plugin.format_path(":.", nil, false, true)
+      assert.equals("project/file.lua:15", result)
+
+      -- Restore
+      vim.fn.expand = original_expand
+      vim.fn.fnamemodify = original_fnamemodify
+      vim.fn.line = original_line
+      vim.fn.mode = original_mode
     end)
   end)
 
@@ -138,7 +228,7 @@ describe("yank-file-path plugin", function()
   describe("copy_to_clipboard", function()
     it("should copy path to clipboard and show notification", function()
       plugin.copy_to_clipboard("/test/path.lua")
-      
+
       assert.equals("/test/path.lua", clipboard_content)
       assert.equals(1, #notifications)
       assert.equals("Copied: /test/path.lua", notifications[1].msg)
@@ -158,28 +248,28 @@ describe("yank-file-path plugin", function()
         return { 1, 2, 3 }
       end
 
-      vim.api.nvim_buf_is_loaded = function(buf)
-        return buf <= 2 -- Only buffers 1 and 2 are loaded
+      vim.api.nvim_buf_is_loaded = function(_buf)
+        return _buf <= 2 -- Only buffers 1 and 2 are loaded
       end
 
-      vim.api.nvim_buf_get_name = function(buf)
-        if buf == 1 then
+      vim.api.nvim_buf_get_name = function(_buf)
+        if _buf == 1 then
           return "/path/file1.lua"
-        elseif buf == 2 then
+        elseif _buf == 2 then
           return "/path/file2.lua"
         else
           return ""
         end
       end
 
-      vim.fn.fnamemodify = function(path, mods)
+      vim.fn.fnamemodify = function(_path, mods)
         if mods == ":t" then
-          return path:match("([^/]+)$")
+          return _path:match("([^/]+)$")
         end
-        return path
+        return _path
       end
 
-      local result = plugin.get_all_buffer_paths(":t")
+      local result = plugin.get_all_buffer_paths(":t", false, false, nil)
       assert.equals(2, #result)
       assert.equals("file1.lua", result[1])
       assert.equals("file2.lua", result[2])
@@ -189,6 +279,58 @@ describe("yank-file-path plugin", function()
       vim.api.nvim_buf_is_loaded = original_buf_is_loaded
       vim.api.nvim_buf_get_name = original_buf_get_name
       vim.fn.fnamemodify = original_fnamemodify
+    end)
+
+    it("should return paths with line numbers when requested", function()
+      -- Mock vim.api functions
+      local original_list_bufs = vim.api.nvim_list_bufs
+      local original_buf_is_loaded = vim.api.nvim_buf_is_loaded
+      local original_buf_get_name = vim.api.nvim_buf_get_name
+      local original_fnamemodify = vim.fn.fnamemodify
+      local original_line = vim.fn.line
+
+      vim.api.nvim_list_bufs = function()
+        return { 1, 2 }
+      end
+
+      vim.api.nvim_buf_is_loaded = function(_buf)
+        return true
+      end
+
+      vim.api.nvim_buf_get_name = function(_buf)
+        if _buf == 1 then
+          return "/path/file1.lua"
+        elseif _buf == 2 then
+          return "/path/file2.lua"
+        end
+        return ""
+      end
+
+      vim.fn.fnamemodify = function(_path, mods)
+        if mods == ":t" then
+          return _path:match("([^/]+)$")
+        end
+        return _path
+      end
+
+      vim.fn.line = function(expr)
+        if expr == "." then
+          return 42
+        end
+        return 1
+      end
+
+      local result = plugin.get_all_buffer_paths(":t", true, false, nil)
+      assert.equals(2, #result)
+      assert.equals("file1.lua:42", result[1])
+      assert.equals("file2.lua:42", result[2])
+
+      -- Restore
+      vim.api.nvim_list_bufs = original_list_bufs
+      vim.api.nvim_buf_is_loaded = original_buf_is_loaded
+      vim.api.nvim_buf_get_name = original_buf_get_name
+      vim.fn.fnamemodify = original_fnamemodify
+      vim.fn.line = original_line
     end)
   end)
 
@@ -204,28 +346,28 @@ describe("yank-file-path plugin", function()
         return { 1, 2 }
       end
 
-      vim.api.nvim_buf_is_loaded = function(buf)
+      vim.api.nvim_buf_is_loaded = function(_buf)
         return true
       end
 
-      vim.api.nvim_buf_get_name = function(buf)
-        if buf == 1 then
+      vim.api.nvim_buf_get_name = function(_buf)
+        if _buf == 1 then
           return "/path/file1.lua"
-        elseif buf == 2 then
+        elseif _buf == 2 then
           return "/path/file2.lua"
         end
         return ""
       end
 
-      vim.fn.fnamemodify = function(path, mods)
+      vim.fn.fnamemodify = function(_path, mods)
         if mods == ":t" then
-          return path:match("([^/]+)$")
+          return _path:match("([^/]+)$")
         end
-        return path
+        return _path
       end
 
-      plugin.copy_all_buffer_paths(":t", { args = "" })
-      
+      plugin.copy_all_buffer_paths(":t", false, false, " ", nil)
+
       assert.equals("file1.lua file2.lua", clipboard_content)
       assert.equals(1, #notifications)
       assert.equals("Copied: file1.lua file2.lua", notifications[1].msg)
@@ -248,28 +390,28 @@ describe("yank-file-path plugin", function()
         return { 1, 2 }
       end
 
-      vim.api.nvim_buf_is_loaded = function(buf)
+      vim.api.nvim_buf_is_loaded = function(_buf)
         return true
       end
 
-      vim.api.nvim_buf_get_name = function(buf)
-        if buf == 1 then
+      vim.api.nvim_buf_get_name = function(_buf)
+        if _buf == 1 then
           return "/path/file1.lua"
-        elseif buf == 2 then
+        elseif _buf == 2 then
           return "/path/file2.lua"
         end
         return ""
       end
 
-      vim.fn.fnamemodify = function(path, mods)
+      vim.fn.fnamemodify = function(_path, mods)
         if mods == ":t" then
-          return path:match("([^/]+)$")
+          return _path:match("([^/]+)$")
         end
-        return path
+        return _path
       end
 
-      plugin.copy_all_buffer_paths(":t", { args = "\\n" })
-      
+      plugin.copy_all_buffer_paths(":t", false, false, "\n", nil)
+
       assert.equals("file1.lua\nfile2.lua", clipboard_content)
 
       -- Restore
@@ -289,16 +431,16 @@ describe("yank-file-path plugin", function()
         return {}
       end
 
-      vim.api.nvim_buf_is_loaded = function(buf)
+      vim.api.nvim_buf_is_loaded = function(_buf)
         return false
       end
 
-      vim.api.nvim_buf_get_name = function(buf)
+      vim.api.nvim_buf_get_name = function(_buf)
         return ""
       end
 
-      plugin.copy_all_buffer_paths(":t", { args = "" })
-      
+      plugin.copy_all_buffer_paths(":t", false, false, " ", nil)
+
       assert.equals("", clipboard_content)
       assert.equals(1, #notifications)
       assert.equals("No buffers with file paths found", notifications[1].msg)
@@ -318,31 +460,31 @@ describe("yank-file-path plugin", function()
       local original_filereadable = vim.fn.filereadable
       local original_fnamemodify = vim.fn.fnamemodify
 
-      vim.fn.isdirectory = function(path)
-        if path == "/project/subdir/file.lua" then
+      vim.fn.isdirectory = function(_path)
+        if _path == "/project/subdir/file.lua" then
           return 0 -- it's a file
-        elseif path == "/project/.git" then
+        elseif _path == "/project/.git" then
           return 1 -- .git directory exists
         else
           return 0
         end
       end
 
-      vim.fn.filereadable = function(path)
+      vim.fn.filereadable = function(_path)
         return 0 -- no files are readable in this test
       end
 
-      vim.fn.fnamemodify = function(path, mods)
+      vim.fn.fnamemodify = function(_path, mods)
         if mods == ":h" then
-          if path == "/project/subdir/file.lua" then
+          if _path == "/project/subdir/file.lua" then
             return "/project/subdir"
-          elseif path == "/project/subdir" then
+          elseif _path == "/project/subdir" then
             return "/project"
-          elseif path == "/project" then
+          elseif _path == "/project" then
             return "/"
           end
         end
-        return path
+        return _path
       end
 
       local result = plugin.find_root_dir("/project/subdir/file.lua")
@@ -360,27 +502,27 @@ describe("yank-file-path plugin", function()
       local original_filereadable = vim.fn.filereadable
       local original_fnamemodify = vim.fn.fnamemodify
 
-      vim.fn.isdirectory = function(path)
-        if path == "/some/file.lua" then
+      vim.fn.isdirectory = function(_path)
+        if _path == "/some/file.lua" then
           return 0 -- it's a file
         else
           return 0 -- no directories match
         end
       end
 
-      vim.fn.filereadable = function(path)
+      vim.fn.filereadable = function(_path)
         return 0 -- no files are readable
       end
 
-      vim.fn.fnamemodify = function(path, mods)
+      vim.fn.fnamemodify = function(_path, mods)
         if mods == ":h" then
-          if path == "/some/file.lua" then
+          if _path == "/some/file.lua" then
             return "/some"
-          elseif path == "/some" then
+          elseif _path == "/some" then
             return "/"
           end
         end
-        return path
+        return _path
       end
 
       local result = plugin.find_root_dir("/some/file.lua")
@@ -411,44 +553,44 @@ describe("yank-file-path plugin", function()
         return pattern
       end
 
-      vim.fn.isdirectory = function(path)
-        if path == "/project/src/file.lua" then
+      vim.fn.isdirectory = function(_path)
+        if _path == "/project/src/file.lua" then
           return 0 -- it's a file
-        elseif path == "/project/.git" then
+        elseif _path == "/project/.git" then
           return 1 -- .git directory exists
         else
           return 0
         end
       end
 
-      vim.fn.filereadable = function(path)
+      vim.fn.filereadable = function(_path)
         return 0
       end
 
-      vim.fn.fnamemodify = function(path, mods)
+      vim.fn.fnamemodify = function(_path, mods)
         if mods == ":h" then
-          if path == "/project/src/file.lua" then
+          if _path == "/project/src/file.lua" then
             return "/project/src"
-          elseif path == "/project/src" then
+          elseif _path == "/project/src" then
             return "/project"
-          elseif path == "/project" then
+          elseif _path == "/project" then
             return "/"
           end
         elseif mods == ":." then
           return "src/file.lua"
         end
-        return path
+        return _path
       end
 
-      vim.fn.resolve = function(path)
-        return path
+      vim.fn.resolve = function(_path)
+        return _path
       end
 
-      vim.fn.escape = function(str, chars)
-        return str:gsub("([" .. chars .. "])", "\\%1")
+      vim.fn.escape = function(str, _chars)
+        return str:gsub("([" .. _chars .. "])", "\\%1")
       end
 
-      vim.fn.substitute = function(str, pattern, replacement, flags)
+      vim.fn.substitute = function(str, pattern, _replacement, _flags)
         if pattern == "^/project/" then
           return str:gsub("^/project/", "")
         end
@@ -468,7 +610,7 @@ describe("yank-file-path plugin", function()
       vim.fn.escape = original_escape
     end)
 
-    it("should fallback to relative path when no root found", function()
+    it("should error when no root found", function()
       -- Mock vim.fn functions
       local original_expand = vim.fn.expand
       local original_isdirectory = vim.fn.isdirectory
@@ -482,29 +624,29 @@ describe("yank-file-path plugin", function()
         return pattern
       end
 
-      vim.fn.isdirectory = function(path)
+      vim.fn.isdirectory = function(_path)
         return 0 -- no directories
       end
 
-      vim.fn.filereadable = function(path)
+      vim.fn.filereadable = function(_path)
         return 0 -- no files
       end
 
-      vim.fn.fnamemodify = function(path, mods)
+      vim.fn.fnamemodify = function(_path, mods)
         if mods == ":h" then
-          if path == "/some/file.lua" then
+          if _path == "/some/file.lua" then
             return "/some"
-          elseif path == "/some" then
+          elseif _path == "/some" then
             return "/"
           end
-        elseif mods == ":." then
-          return "file.lua"
         end
-        return path
+        return _path
       end
 
-      local result = plugin.format_path(":root")
-      assert.equals("file.lua", result)
+      local success, err = pcall(plugin.format_path, ":root")
+      assert.is_false(success)
+      assert.matches("Root directory not found", err)
+      assert.matches("'.git'", err)
 
       -- Restore
       vim.fn.expand = original_expand
@@ -516,12 +658,12 @@ describe("yank-file-path plugin", function()
 
   describe("setup", function()
     local original_config
-    
+
     before_each(function()
       -- Save the original config state
       original_config = vim.deepcopy(plugin.config)
     end)
-    
+
     after_each(function()
       -- Restore the original config state
       for k, v in pairs(original_config) do
@@ -536,7 +678,7 @@ describe("yank-file-path plugin", function()
 
     it("should merge user configuration with defaults", function()
       plugin.setup({
-        root_markers = { ".git", "custom.toml" }
+        root_markers = { ".git", "custom.toml" },
       })
       assert.same({ ".git", "custom.toml" }, plugin.config.root_markers)
     end)
@@ -550,12 +692,12 @@ describe("yank-file-path plugin", function()
 
   describe("set_root_markers", function()
     local original_config
-    
+
     before_each(function()
       -- Save the original config state
       original_config = vim.deepcopy(plugin.config)
     end)
-    
+
     after_each(function()
       -- Restore the original config state
       for k, v in pairs(original_config) do
@@ -574,7 +716,7 @@ describe("yank-file-path plugin", function()
       -- Check that commands exist (this is a basic integration test)
       local commands = {
         "YankRelativeFilePath",
-        "YankAbsoluteFilePath", 
+        "YankAbsoluteFilePath",
         "YankRelativeFilePathFromHome",
         "YankFileName",
         "YankRelativeFilePathWithLine",
@@ -588,7 +730,7 @@ describe("yank-file-path plugin", function()
         "YankAllFileNames",
         "YankRootRelativeFilePath",
         "YankAllRootRelativeFilePaths",
-        "YankFilePath"
+        "YankFilePath",
       }
 
       for _, cmd in ipairs(commands) do

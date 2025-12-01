@@ -7,15 +7,17 @@ A Neovim plugin that provides convenient commands to copy (yank) file paths to t
 ## Features
 
 - 🚀 Copy current file path in multiple formats (relative, absolute, from home, filename only)
-- 🎯 Copy file paths relative to project root (auto-detects .git, package.json, etc.)
-- 📍 Copy file paths with current line numbers for precise referencing
+- 🎯 Copy file paths relative to project root (auto-detects .git by default, configurable)
+- 📍 Copy file paths with current line numbers or ranges for precise referencing
 - 📁 Copy multiple buffer paths at once with customizable separators
 - 🔧 Configurable root markers for project detection
 - 📋 Automatic system clipboard integration
 - 🔔 Visual feedback with notifications
 - ⚙️ Runtime configuration support
+- 🎹 Default key mappings with `<leader>y` prefix (configurable)
 - 📚 Comprehensive documentation and help files
 - 🧪 Fully tested with comprehensive test suite
+- ⚡ Unified command interface with `YankFilePath` supporting all functionality
 
 ## Installation
 
@@ -27,7 +29,9 @@ A Neovim plugin that provides convenient commands to copy (yank) file paths to t
     config = function()
         require("yank-file-path").setup({
             -- Optional: customize root markers for root-relative paths
-            root_markers = { ".git", ".hg", "package.json", "Cargo.toml", "pyproject.toml" }
+            root_markers = { ".git", "package.json", "Cargo.toml", "pyproject.toml" },
+            -- Optional: disable default key mappings
+            enable_default_mappings = true
         })
     end,
 }
@@ -50,7 +54,9 @@ use {
     config = function()
         require("yank-file-path").setup({
             -- Optional: customize root markers
-            root_markers = { ".git", "package.json", "go.mod" }
+            root_markers = { ".git", "package.json", "go.mod" },
+            -- Optional: disable default key mappings
+            enable_default_mappings = true
         })
     end
 }
@@ -71,7 +77,9 @@ Plug 'neumachen/yank-file-path.nvim'
 lua << EOF
 require("yank-file-path").setup({
     -- Optional: customize root markers
-    root_markers = { ".git", "package.json", "go.mod" }
+    root_markers = { ".git", "package.json", "go.mod" },
+    -- Optional: disable default key mappings
+    enable_default_mappings = true
 })
 EOF
 ```
@@ -84,7 +92,36 @@ Plug 'neumachen/yank-file-path.nvim'
 
 ## Commands
 
-### Single File Commands
+### Main Command
+
+The plugin provides a unified command interface:
+
+**`:YankFilePath [format] [options]`**
+
+**Format options:**
+- `relative` - Copy relative file path (default)
+- `absolute` - Copy absolute file path  
+- `filename` - Copy filename only
+- `home` - Copy path relative to home directory (~)
+- `root` - Copy path relative to project root
+
+**Options:**
+- `--line` - Include current line number
+- `--range` - Include line range (works with visual selection)
+- `--all` - Copy paths from all loaded buffers
+- `--separator=<sep>` - Custom separator for multiple paths (default: space)
+- `--root=<marker>` - Specific root marker to search for (default: .git)
+
+**Examples:**
+```vim
+:YankFilePath relative
+:YankFilePath absolute --line
+:YankFilePath filename --range
+:YankFilePath root --root=package.json
+:YankFilePath --all relative --separator="\n"
+```
+
+### Legacy Commands (for backward compatibility)
 
 | Command | Description | Example Output |
 |---------|-------------|----------------|
@@ -93,9 +130,8 @@ Plug 'neumachen/yank-file-path.nvim'
 | `:YankRelativeFilePathFromHome` | Copy path relative to home | `~/project/src/main.lua` |
 | `:YankFileName` | Copy just the filename | `main.lua` |
 | `:YankRootRelativeFilePath` | Copy path relative to project root | `src/main.lua` |
-| `:YankFilePath` | Alias for `:YankRelativeFilePath` | `src/main.lua` |
 
-### Single File Commands with Line Numbers
+### Legacy Commands with Line Numbers
 
 | Command | Description | Example Output |
 |---------|-------------|----------------|
@@ -105,7 +141,7 @@ Plug 'neumachen/yank-file-path.nvim'
 | `:YankFileNameWithLine` | Copy filename with line number | `main.lua:42` |
 | `:YankRootRelativeFilePathWithLine` | Copy path relative to project root with line number | `src/main.lua:42` |
 
-### Multiple Files Commands
+### Legacy Multiple Files Commands
 
 | Command | Description | Default Separator |
 |---------|-------------|-------------------|
@@ -117,7 +153,65 @@ Plug 'neumachen/yank-file-path.nvim'
 
 ## Usage Examples
 
-### Basic Usage
+### Basic Usage (New Unified Command)
+
+```vim
+" Copy current file's relative path
+:YankFilePath relative
+
+" Copy current file's absolute path
+:YankFilePath absolute
+
+" Copy just the filename
+:YankFilePath filename
+
+" Copy path relative to project root
+:YankFilePath root
+
+" Copy path relative to home directory
+:YankFilePath home
+```
+
+### With Line Numbers and Ranges
+
+```vim
+" Copy relative path with current line number
+:YankFilePath relative --line
+
+" Copy absolute path with line range (works with visual selection)
+:YankFilePath absolute --range
+
+" Copy filename with current line number
+:YankFilePath filename --line
+```
+
+### Multiple Files
+
+```vim
+" Copy all relative paths (space-separated)
+:YankFilePath --all relative
+
+" Copy all relative paths separated by newlines
+:YankFilePath --all relative --separator="\n"
+
+" Copy all filenames separated by commas
+:YankFilePath --all filename --separator=","
+
+" Copy all absolute paths separated by tabs
+:YankFilePath --all absolute --separator="\t"
+```
+
+### Custom Root Markers
+
+```vim
+" Use package.json as root marker instead of .git
+:YankFilePath root --root=package.json
+
+" Copy all paths relative to Cargo.toml root
+:YankFilePath --all root --root=Cargo.toml --separator="\n"
+```
+
+### Legacy Commands (still supported)
 
 ```vim
 " Copy current file's relative path
@@ -128,19 +222,9 @@ Plug 'neumachen/yank-file-path.nvim'
 
 " Copy just the filename
 :YankFileName
-```
 
-### Multiple Files with Custom Separators
-
-```vim
 " Copy all relative paths separated by newlines
 :YankAllRelativeFilePaths \n
-
-" Copy all filenames separated by commas
-:YankAllFileNames ,
-
-" Copy all absolute paths separated by tabs
-:YankAllAbsoluteFilePaths \t
 ```
 
 ### Special Separators
@@ -149,45 +233,99 @@ Plug 'neumachen/yank-file-path.nvim'
 - `\t` - tab character
 - Any other string is used as-is (e.g., `,`, ` | `, etc.)
 
-## Key Mappings (Optional)
+## Key Mappings
 
-You can create your own key mappings for frequently used commands:
+### Default Key Mappings
 
-### Basic Key Mappings
+The plugin automatically sets up key mappings using the pattern `<leader>y` + format + modifiers:
 
-```lua
--- Single file commands
-vim.keymap.set('n', '<leader>yp', ':YankRelativeFilePath<CR>', { desc = 'Yank relative file path' })
-vim.keymap.set('n', '<leader>yP', ':YankAbsoluteFilePath<CR>', { desc = 'Yank absolute file path' })
-vim.keymap.set('n', '<leader>yh', ':YankRelativeFilePathFromHome<CR>', { desc = 'Yank path from home' })
-vim.keymap.set('n', '<leader>yn', ':YankFileName<CR>', { desc = 'Yank filename only' })
-vim.keymap.set('n', '<leader>yr', ':YankRootRelativeFilePath<CR>', { desc = 'Yank root-relative path' })
+**Format letters:**
+- `r` = relative path
+- `a` = absolute path  
+- `f` = filename only
+- `h` = home-relative path (~)
+- `o` = root-relative path (project root)
 
--- Single file commands with line numbers
-vim.keymap.set('n', '<leader>ypl', ':YankRelativeFilePathWithLine<CR>', { desc = 'Yank relative path with line' })
-vim.keymap.set('n', '<leader>yPl', ':YankAbsoluteFilePathWithLine<CR>', { desc = 'Yank absolute path with line' })
-vim.keymap.set('n', '<leader>yhl', ':YankRelativeFilePathFromHomeWithLine<CR>', { desc = 'Yank path from home with line' })
-vim.keymap.set('n', '<leader>ynl', ':YankFileNameWithLine<CR>', { desc = 'Yank filename with line' })
-vim.keymap.set('n', '<leader>yrl', ':YankRootRelativeFilePathWithLine<CR>', { desc = 'Yank root-relative path with line' })
+**Modifier letters:**
+- `l` = include line number
+- `r` = include range (works with visual selection)
+- `a` = all buffers
+- `n` = newline separator (when combined with `a`)
 
--- Multiple files commands
-vim.keymap.set('n', '<leader>yap', ':YankAllRelativeFilePaths<CR>', { desc = 'Yank all relative paths' })
-vim.keymap.set('n', '<leader>yaP', ':YankAllAbsoluteFilePaths<CR>', { desc = 'Yank all absolute paths' })
-vim.keymap.set('n', '<leader>yan', ':YankAllFileNames<CR>', { desc = 'Yank all filenames' })
-vim.keymap.set('n', '<leader>yar', ':YankAllRootRelativeFilePaths<CR>', { desc = 'Yank all root-relative paths' })
+**Single file mappings:**
+```vim
+<leader>yr   " Yank relative file path
+<leader>ya   " Yank absolute file path
+<leader>yf   " Yank filename only
+<leader>yh   " Yank home-relative path
+<leader>yo   " Yank root-relative path
 ```
 
-### Advanced Key Mappings with Custom Separators
+**Single file with line number:**
+```vim
+<leader>yrl  " Yank relative path with line number
+<leader>yal  " Yank absolute path with line number
+<leader>yfl  " Yank filename with line number
+<leader>yhl  " Yank home-relative path with line number
+<leader>yol  " Yank root-relative path with line number
+```
+
+**Single file with range (normal and visual mode):**
+```vim
+<leader>yrr  " Yank relative path with range
+<leader>yar  " Yank absolute path with range
+<leader>yfr  " Yank filename with range
+<leader>yhr  " Yank home-relative path with range
+<leader>yor  " Yank root-relative path with range
+```
+
+**All buffers (space-separated):**
+```vim
+<leader>yra  " Yank all relative paths
+<leader>yaa  " Yank all absolute paths
+<leader>yfa  " Yank all filenames
+<leader>yha  " Yank all home-relative paths
+<leader>yoa  " Yank all root-relative paths
+```
+
+**All buffers (newline-separated):**
+```vim
+<leader>yran " Yank all relative paths (newlines)
+<leader>yaan " Yank all absolute paths (newlines)
+<leader>yfan " Yank all filenames (newlines)
+<leader>yhan " Yank all home-relative paths (newlines)
+<leader>yoan " Yank all root-relative paths (newlines)
+```
+
+### Custom Key Mappings
+
+You can disable the default mappings and create your own:
 
 ```lua
--- Copy all paths with newline separator
-vim.keymap.set('n', '<leader>yanl', ':YankAllRelativeFilePaths \\n<CR>', { desc = 'Yank all paths (newlines)' })
+-- Disable default mappings
+require("yank-file-path").setup({
+    enable_default_mappings = false
+})
 
--- Copy all paths with comma separator
-vim.keymap.set('n', '<leader>yac', ':YankAllRelativeFilePaths ,<CR>', { desc = 'Yank all paths (commas)' })
+-- Set your own mappings using the new unified command
+vim.keymap.set('n', '<leader>yp', ':YankFilePath relative<CR>', { desc = 'Yank relative file path' })
+vim.keymap.set('n', '<leader>yP', ':YankFilePath absolute<CR>', { desc = 'Yank absolute file path' })
+vim.keymap.set('n', '<leader>yf', ':YankFilePath filename<CR>', { desc = 'Yank filename only' })
+vim.keymap.set('n', '<leader>yh', ':YankFilePath home<CR>', { desc = 'Yank home-relative path' })
+vim.keymap.set('n', '<leader>yo', ':YankFilePath root<CR>', { desc = 'Yank root-relative path' })
 
--- Copy all filenames with tab separator
-vim.keymap.set('n', '<leader>yant', ':YankAllFileNames \\t<CR>', { desc = 'Yank all filenames (tabs)' })
+-- With line numbers
+vim.keymap.set('n', '<leader>ypl', ':YankFilePath relative --line<CR>', { desc = 'Yank relative path with line' })
+vim.keymap.set('n', '<leader>yPl', ':YankFilePath absolute --line<CR>', { desc = 'Yank absolute path with line' })
+
+-- With ranges (works in visual mode too)
+vim.keymap.set({'n', 'v'}, '<leader>ypr', ':YankFilePath relative --range<CR>', { desc = 'Yank relative path with range' })
+vim.keymap.set({'n', 'v'}, '<leader>yPr', ':YankFilePath absolute --range<CR>', { desc = 'Yank absolute path with range' })
+
+-- All buffers
+vim.keymap.set('n', '<leader>yap', ':YankFilePath --all relative<CR>', { desc = 'Yank all relative paths' })
+vim.keymap.set('n', '<leader>yaP', ':YankFilePath --all absolute<CR>', { desc = 'Yank all absolute paths' })
+vim.keymap.set('n', '<leader>yan', ':YankFilePath --all relative --separator="\\n"<CR>', { desc = 'Yank all paths (newlines)' })
 ```
 
 ### Using with Which-Key Plugin
@@ -200,28 +338,11 @@ local wk = require("which-key")
 wk.register({
   y = {
     name = "Yank File Paths",
-    p = { ":YankRelativeFilePath<CR>", "Relative path" },
-    P = { ":YankAbsoluteFilePath<CR>", "Absolute path" },
-    h = { ":YankRelativeFilePathFromHome<CR>", "Path from home" },
-    n = { ":YankFileName<CR>", "Filename only" },
-    r = { ":YankRootRelativeFilePath<CR>", "Root-relative path" },
-    l = {
-      name = "With Line Numbers",
-      p = { ":YankRelativeFilePathWithLine<CR>", "Relative path with line" },
-      P = { ":YankAbsoluteFilePathWithLine<CR>", "Absolute path with line" },
-      h = { ":YankRelativeFilePathFromHomeWithLine<CR>", "Path from home with line" },
-      n = { ":YankFileNameWithLine<CR>", "Filename with line" },
-      r = { ":YankRootRelativeFilePathWithLine<CR>", "Root-relative path with line" },
-    },
-    a = {
-      name = "All Files",
-      p = { ":YankAllRelativeFilePaths<CR>", "All relative paths" },
-      P = { ":YankAllAbsoluteFilePaths<CR>", "All absolute paths" },
-      n = { ":YankAllFileNames<CR>", "All filenames" },
-      r = { ":YankAllRootRelativeFilePaths<CR>", "All root-relative paths" },
-      l = { ":YankAllRelativeFilePaths \\n<CR>", "All paths (newlines)" },
-      c = { ":YankAllRelativeFilePaths ,<CR>", "All paths (commas)" },
-    },
+    r = { ":YankFilePath relative<CR>", "Relative path" },
+    a = { ":YankFilePath absolute<CR>", "Absolute path" },
+    f = { ":YankFilePath filename<CR>", "Filename only" },
+    h = { ":YankFilePath home<CR>", "Home-relative path" },
+    o = { ":YankFilePath root<CR>", "Root-relative path" },
   },
 }, { prefix = "<leader>" })
 ```
@@ -230,6 +351,18 @@ wk.register({
 ## Configuration
 
 The plugin works out of the box without any configuration. All commands are automatically available after the plugin is loaded.
+
+### Configuration Options
+
+```lua
+require("yank-file-path").setup({
+    -- Root markers for project detection (default: { ".git" })
+    root_markers = { ".git", "package.json", "go.mod" },
+    
+    -- Enable/disable default key mappings (default: true)
+    enable_default_mappings = true
+})
+```
 
 ### Custom Root Markers
 
@@ -241,7 +374,7 @@ You can customize the root markers used for root-relative path detection:
     "neumachen/yank-file-path.nvim",
     config = function()
         require("yank-file-path").setup({
-            root_markers = { ".git", ".hg", "package.json", "Cargo.toml", "pyproject.toml" }
+            root_markers = { ".git", "package.json", "Cargo.toml", "pyproject.toml" }
         })
     end,
 }
@@ -254,15 +387,7 @@ require("yank-file-path").setup({
 
 ### Default Root Markers
 
-The plugin comes with these default root markers:
-- `.git`
-- `.hg` 
-- `.svn`
-- `package.json`
-- `Cargo.toml`
-- `go.mod`
-- `pyproject.toml`
-- `Makefile`
+The plugin defaults to using only `.git` as the root marker. This provides consistent behavior and errors clearly when no root is found.
 
 ### Runtime Configuration
 
@@ -272,11 +397,31 @@ You can also change root markers at runtime:
 require("yank-file-path").set_root_markers({ ".git", "custom.toml" })
 ```
 
+### Per-Command Root Markers
+
+You can specify a custom root marker for individual commands:
+
+```vim
+" Use package.json as root marker for this command
+:YankFilePath root --root=package.json
+
+" Use Cargo.toml for all buffers
+:YankFilePath --all root --root=Cargo.toml --separator="\n"
+```
+
+### Error Handling
+
+The plugin now provides strict error handling:
+- **Root not found**: When using `root` format, the plugin will error if no root marker is found
+- **Clear error messages**: Specific error messages indicate which root marker was searched for
+- **No fallbacks**: The plugin no longer falls back to relative paths when root is not found
+
 ### Notifications
 
 The plugin uses `vim.notify()` for user feedback:
 - **INFO level**: Successful copy operations
 - **WARN level**: Warnings (e.g., when no buffers are found)
+- **ERROR level**: Error conditions (e.g., root directory not found)
 
 ## Development
 

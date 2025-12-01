@@ -1,19 +1,20 @@
 local config_module = require("yank-file-path.config")
 
 ---@param start_path string starting directory path
+---@param root_marker string|nil specific root marker to search for (defaults to first in config)
 ---@return string|nil root directory path or nil if not found
-local function find_root_dir(start_path)
+local function find_root_dir(start_path, root_marker)
   local path = start_path
   if vim.fn.isdirectory(path) == 0 then
     path = vim.fn.fnamemodify(path, ":h")
   end
 
+  local marker = root_marker or config_module.config.root_markers[1]
+
   while path ~= "/" and path ~= "" do
-    for _, marker in ipairs(config_module.config.root_markers) do
-      local marker_path = path .. "/" .. marker
-      if vim.fn.filereadable(marker_path) == 1 or vim.fn.isdirectory(marker_path) == 1 then
-        return path
-      end
+    local marker_path = path .. "/" .. marker
+    if vim.fn.filereadable(marker_path) == 1 or vim.fn.isdirectory(marker_path) == 1 then
+      return path
     end
     local parent = vim.fn.fnamemodify(path, ":h")
     if parent == path then
@@ -28,27 +29,45 @@ end
 ---@param mods string filename-modifiers
 ---@param buf_path string|nil file path (defaults to current buffer)
 ---@param include_line boolean|nil whether to include line number
+---@param include_range boolean|nil whether to include line range
+---@param root_marker string|nil specific root marker to search for
 ---@return string
 ---see: https://vim-jp.org/vimdoc-ja/cmdline.html#filename-modifiers
-local function format_path(mods, buf_path, include_line)
+local function format_path(mods, buf_path, include_line, include_range, root_marker)
   local path = buf_path or vim.fn.expand("%")
   local formatted_path
 
   if mods == ":root" then
-    local root_dir = find_root_dir(path)
+    local root_dir = find_root_dir(path, root_marker)
     if root_dir then
       local root_relative = vim.fn.substitute(vim.fn.resolve(path), "^" .. vim.fn.escape(root_dir, "\\") .. "/", "", "")
       formatted_path = root_relative
     else
-      -- Fallback to relative path if no root found
-      formatted_path = vim.fn.fnamemodify(path, ":.")
+      local marker = root_marker or config_module.config.root_markers[1]
+      error("Root directory not found. No '" .. marker .. "' marker found in any parent directory.")
     end
   else
     formatted_path = vim.fn.fnamemodify(path, mods)
   end
 
-  if include_line then
-    local line_number = vim.fn.line('.')
+  if include_range then
+    -- Get visual selection range if in visual mode, otherwise use current line
+    local start_line, end_line
+    if vim.fn.mode() == "v" or vim.fn.mode() == "V" or vim.fn.mode() == "\22" then
+      start_line = vim.fn.line("'<")
+      end_line = vim.fn.line("'>")
+    else
+      start_line = vim.fn.line(".")
+      end_line = start_line
+    end
+
+    if start_line == end_line then
+      return formatted_path .. ":" .. start_line
+    else
+      return formatted_path .. ":" .. start_line .. "-" .. end_line
+    end
+  elseif include_line then
+    local line_number = vim.fn.line(".")
     return formatted_path .. ":" .. line_number
   else
     return formatted_path
@@ -74,14 +93,17 @@ local function parse_separator(separator)
 end
 
 ---@param mods string filename-modifiers
+---@param include_line boolean|nil whether to include line number
+---@param include_range boolean|nil whether to include line range
+---@param root_marker string|nil specific root marker to search for
 ---@return string[]
-local function get_all_buffer_paths(mods)
+local function get_all_buffer_paths(mods, include_line, include_range, root_marker)
   local paths = {}
   local buffers = vim.api.nvim_list_bufs()
 
   for _, buf in ipairs(buffers) do
     if vim.api.nvim_buf_is_loaded(buf) and vim.api.nvim_buf_get_name(buf) ~= "" then
-      local path = format_path(mods, vim.api.nvim_buf_get_name(buf))
+      local path = format_path(mods, vim.api.nvim_buf_get_name(buf), include_line, include_range, root_marker)
       table.insert(paths, path)
     end
   end
@@ -90,9 +112,12 @@ local function get_all_buffer_paths(mods)
 end
 
 ---@param mods string filename-modifiers
-local function copy_all_buffer_paths(mods, opts)
-  local separator = opts.args and opts.args ~= "" and parse_separator(opts.args) or " "
-  local paths = get_all_buffer_paths(mods)
+---@param include_line boolean|nil whether to include line number
+---@param include_range boolean|nil whether to include line range
+---@param separator string separator to use between paths
+---@param root_marker string|nil specific root marker to search for
+local function copy_all_buffer_paths(mods, include_line, include_range, separator, root_marker)
+  local paths = get_all_buffer_paths(mods, include_line, include_range, root_marker)
 
   if #paths == 0 then
     vim.notify("No buffers with file paths found", vim.log.levels.WARN)

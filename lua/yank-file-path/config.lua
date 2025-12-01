@@ -1,6 +1,7 @@
 -- Default configuration
 local default_config = {
-  root_markers = { ".git", ".hg", ".svn", "package.json", "Cargo.toml", "go.mod", "pyproject.toml", "Makefile" }
+  root_markers = { ".git" },
+  enable_default_mappings = true
 }
 
 -- Current configuration (starts with defaults)

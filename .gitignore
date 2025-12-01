@@ -1,0 +1,54 @@
+# Lua
+*.luac
+luac.out
+
+# Neovim
+.nvim/
+.nvimrc.local
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Test coverage
+coverage/
+*.coverage
+
+# Build artifacts
+build/
+dist/
+
+# Dependencies
+node_modules/
+.pnpm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Cache
+.cache/
+*.cache
+
+# Luacheck cache
+.luacheckcache
